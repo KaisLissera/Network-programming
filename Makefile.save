@@ -1,0 +1,6 @@
+all: arpspf.cpp
+	g++ arpspf.cpp -Iinc -o debug/arpsp
+f
+
+clean:
+	rm -f debug/arpspf

