@@ -1,5 +1,5 @@
-all: main.cpp
-	g++ main.cpp -o debug/a.out
+all: arpspf.cpp
+	g++ arpspf.cpp -Iinc -o debug/arpspf
 
 clean:
-	rm -f debug/a.out
+	rm -f debug/arpspf

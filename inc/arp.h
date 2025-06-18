@@ -9,7 +9,7 @@
 #include <arpa/inet.h> // inet_pton
 #include <unistd.h> // close
 
-#include "common.h"
+#include <common.h>
 
 #define ARP_PROTO_LEN 4
 #define ARP_HARDWARE_LEN 6
